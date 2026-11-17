@@ -4,34 +4,13 @@ import { Mic, Square, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { features, rank, recognize, type Ranked } from '../audio/features'
 import { micSupported, openMic, type Mic as MicHandle } from '../audio/mic'
+import { HOW } from '../data/phrases'
 import { SOUNDS } from '../data/sounds'
 import { wordById } from '../data/words'
 import { avatarEmoji } from '../game/rewards'
 import { useDb } from '../store/db'
 import { addVoice, CLASS_OWNER, clearVoices, loadVoices, MAX_PER_SOUND, templatesFor, useVoices } from '../store/voices'
 
-/** Como fazer cada som (o som, não o nome da letra). */
-const HOW: Record<string, string> = {
-  A: 'á',
-  E: 'é',
-  I: 'i',
-  O: 'ó',
-  U: 'u',
-  P: 'pâ (curtinho)',
-  B: 'bâ (curtinho)',
-  T: 'tâ (curtinho)',
-  D: 'dâ (curtinho)',
-  C: 'câ, como em casa',
-  G: 'gâ, como em gato',
-  F: 'ffff (segure)',
-  V: 'vvvv (segure)',
-  M: 'mmmm (boca fechada)',
-  N: 'nnnn',
-  S: 'ssss (cobrinha)',
-  Z: 'zzzz (abelha)',
-  L: 'llll',
-  R: 'rrrr, como em rato',
-}
 
 type Status = { kind: 'idle' } | { kind: 'recording'; sound: string } | { kind: 'testing' } | { kind: 'message'; text: string; warn?: boolean }
 

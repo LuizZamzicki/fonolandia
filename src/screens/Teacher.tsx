@@ -1,6 +1,6 @@
 // Área da professora: PIN, turma, desempenho por criança e por som, trocas frequentes e evolução.
 
-import { AlertTriangle, AudioLines, Cloud, Download, LogOut, Plus, RefreshCw, Settings, Users, Grid3x3 } from 'lucide-react'
+import { AlertTriangle, AudioLines, Cloud, Download, LogOut, Mic, Plus, RefreshCw, Settings, Users, Grid3x3 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { GAME_INFO, ISLANDS, SOUNDS, levelById, type GameKind } from '../data/sounds'
 import { bestStars, totalStars, MAX_STARS } from '../game/progress'
@@ -34,6 +34,7 @@ import {
 import { addStudent, updateSettings, updateStudent, useDb } from '../store/db'
 import type { Attempt, Student } from '../store/types'
 import { BackButton, StarRow } from '../ui/kit'
+import { TeacherRecordings } from './TeacherRecordings'
 import { TeacherVoices } from './TeacherVoices'
 
 export function Teacher({ onExit }: { onExit: () => void }) {
@@ -118,7 +119,7 @@ function PinGate({ pin, onOk, onExit }: { pin: string | null; onOk: () => void; 
 
 // --- Painel ---------------------------------------------------------------------------
 
-type Tab = 'turma' | 'sons' | 'vozes' | 'config'
+type Tab = 'turma' | 'sons' | 'minhavoz' | 'vozes' | 'config'
 
 function Panel({ onExit }: { onExit: () => void }) {
   const db = useDb()
@@ -170,11 +171,13 @@ function Panel({ onExit }: { onExit: () => void }) {
           <nav className="tabs" role="tablist">
             <TabButton on={tab === 'turma'} onClick={() => setTab('turma')} icon={<Users size={18} />} label="Turma" />
             <TabButton on={tab === 'sons'} onClick={() => setTab('sons')} icon={<Grid3x3 size={18} />} label="Sons" />
-            <TabButton on={tab === 'vozes'} onClick={() => setTab('vozes')} icon={<AudioLines size={18} />} label="Vozes" />
+            <TabButton on={tab === 'minhavoz'} onClick={() => setTab('minhavoz')} icon={<Mic size={18} />} label="Minha voz" />
+            <TabButton on={tab === 'vozes'} onClick={() => setTab('vozes')} icon={<AudioLines size={18} />} label="Reconhecer" />
             <TabButton on={tab === 'config'} onClick={() => setTab('config')} icon={<Settings size={18} />} label="Ajustes" />
           </nav>
           {tab === 'turma' && <ClassOverview students={students} attempts={attempts} onOpen={setSelected} />}
           {tab === 'sons' && <SoundHeatmap students={students} attempts={attempts} onOpen={setSelected} />}
+          {tab === 'minhavoz' && <TeacherRecordings />}
           {tab === 'vozes' && <TeacherVoices />}
           {tab === 'config' && <SettingsTab />}
         </>

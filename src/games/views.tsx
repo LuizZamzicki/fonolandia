@@ -2,12 +2,22 @@
 // terminou (`onComplete`). Erros não travam: a criança tenta de novo e aprende com a dica falada.
 
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import {
+  cacaInstruction,
+  faltaInstruction,
+  faltaWrong,
+  montaInstruction,
+  montaListen,
+  rimaExplanation,
+  rimaInstruction,
+  startsWithHint,
+} from '../data/phrases'
 import { soundInfo } from '../data/sounds'
 import { wordById, type Word } from '../data/words'
 import type { Question } from '../game/questions'
 import { playSound } from '../lib/sounds'
-import { speak, speakWord, stopSpeaking } from '../lib/speech'
+import { lineText, speak, speakWord, stopSpeaking, type Line } from '../lib/speech'
 import { Figure, SpeakButton } from '../ui/kit'
 
 export interface ViewProps<Q> {
@@ -21,23 +31,17 @@ type Falta = Extract<Question, { kind: 'falta' }>
 type Monta = Extract<Question, { kind: 'monta' }>
 type Rima = Extract<Question, { kind: 'rima' }>
 
-/** "o som do bê" / "o som do á". */
-function soundName(key: string): string {
-  const info = soundInfo(key)
-  return info ? `o som do ${info.spoken}` : 'outro som'
-}
-
-function cacaInstruction(target: string): string {
-  const info = soundInfo(target)!
-  const example = wordById(info.example)!
-  return `Toque nas figuras que começam com ${soundName(target)}, de ${example.word.toLowerCase()}.`
-}
-
 /** Fala a instrução ao abrir a pergunta e para de falar ao sair. */
-function useInstruction(text: string) {
+function useInstruction(line: Line) {
+  // A fala muda a cada render (lista nova); o texto diz se é a mesma
+  const text = lineText(line)
+  const latest = useRef(line)
+  useEffect(() => {
+    latest.current = line
+  })
   useEffect(() => {
     // Um respiro antes de falar, para a troca de tela terminar
-    const timer = window.setTimeout(() => speak(text), 350)
+    const timer = window.setTimeout(() => speak(latest.current), 350)
     return () => {
       window.clearTimeout(timer)
       stopSpeaking()
@@ -71,7 +75,7 @@ export function CacaView({ q, onAnswer, onComplete }: ViewProps<Caca>) {
       playSound('wrong')
       onAnswer(q.target, word.start, false)
       // A dica ensina: diz com que som a figura começa de verdade
-      speak(`${word.word.toLowerCase()} começa com ${soundName(word.start)}.`)
+      speak(startsWithHint(word))
       window.setTimeout(() => setWrong((w) => (w === word.id ? null : w)), 700)
     }
   }
@@ -83,7 +87,7 @@ export function CacaView({ q, onAnswer, onComplete }: ViewProps<Caca>) {
         <span className="target-example" aria-hidden="true">
           {example.emoji}
         </span>
-        <SpeakButton text={instruction} label="Ouvir a instrução" />
+        <SpeakButton line={instruction} label="Ouvir a instrução" />
       </div>
       <p className="game-hint">
         Encontre {q.correct.length} figuras · {found.length}/{q.correct.length}
@@ -106,7 +110,7 @@ export function CacaView({ q, onAnswer, onComplete }: ViewProps<Caca>) {
 
 export function FaltaView({ q, onAnswer, onComplete }: ViewProps<Falta>) {
   const word = q.word
-  const instruction = `Qual letra está faltando em ${word.word.toLowerCase()}?`
+  const instruction = faltaInstruction(word)
   const [tried, setTried] = useState<string[]>([])
   const [done, setDone] = useState(false)
   const [shake, setShake] = useState(false)
@@ -126,7 +130,7 @@ export function FaltaView({ q, onAnswer, onComplete }: ViewProps<Falta>) {
       window.setTimeout(() => setShake(false), 450)
       playSound('wrong')
       onAnswer(q.answer, letter, false)
-      speak(`Não é ${soundInfo(letter)?.spoken ?? letter}. Escute de novo: ${word.word.toLowerCase()}.`)
+      speak(faltaWrong(letter, word))
     }
   }
 
@@ -134,7 +138,7 @@ export function FaltaView({ q, onAnswer, onComplete }: ViewProps<Falta>) {
     <div className="game game-falta">
       <div className="falta-figure rise">
         <Figure word={word} size="xl" showWord={false} />
-        <SpeakButton text={instruction} label="Ouvir a instrução" />
+        <SpeakButton line={instruction} label="Ouvir a instrução" />
       </div>
       <div className={`falta-word ${shake ? 'shake' : ''}`} aria-label={done ? word.word : `${word.word.slice(1)} com a primeira letra faltando`}>
         <span className={`falta-blank ${done ? 'falta-filled pop' : ''}`}>{done ? word.word[0] : '?'}</span>
@@ -161,7 +165,7 @@ export function FaltaView({ q, onAnswer, onComplete }: ViewProps<Falta>) {
 
 export function MontaView({ q, onAnswer, onComplete }: ViewProps<Monta>) {
   const word = q.word
-  const instruction = `Monte a palavra ${word.word.toLowerCase()}. Toque nas sílabas na ordem certa.`
+  const instruction = montaInstruction(word)
   /** Índices das peças já colocadas. */
   const [placed, setPlaced] = useState<number[]>([])
   const [wrong, setWrong] = useState<number | null>(null)
@@ -186,7 +190,7 @@ export function MontaView({ q, onAnswer, onComplete }: ViewProps<Monta>) {
       setWrong(index)
       playSound('wrong')
       onAnswer(word.start, piece, false)
-      speak(`Escute: ${word.syllables.map((s) => s.toLowerCase()).join('... ')}`, undefined, 0.75)
+      speak(montaListen(word), undefined, 0.75)
       window.setTimeout(() => setWrong((w) => (w === index ? null : w)), 600)
     }
   }
@@ -195,7 +199,7 @@ export function MontaView({ q, onAnswer, onComplete }: ViewProps<Monta>) {
     <div className="game game-monta">
       <div className="falta-figure rise">
         <Figure word={word} size="xl" />
-        <SpeakButton text={word.word.toLowerCase()} label="Ouvir a palavra" />
+        <SpeakButton line={word.word.toLowerCase()} label="Ouvir a palavra" />
       </div>
       <div className="slots">
         {word.syllables.map((syllable, i) => (
@@ -224,9 +228,7 @@ export function MontaView({ q, onAnswer, onComplete }: ViewProps<Monta>) {
 // --- Rima ou Não Rima? -------------------------------------------------------------
 
 export function RimaView({ q, onAnswer, onComplete }: ViewProps<Rima>) {
-  const a = q.a.word.toLowerCase()
-  const b = q.b.word.toLowerCase()
-  const instruction = `${a}... ${b}. Rima ou não rima?`
+  const instruction = rimaInstruction(q.a, q.b)
   const [result, setResult] = useState<'right' | 'wrong' | null>(null)
   useInstruction(instruction)
 
@@ -236,8 +238,7 @@ export function RimaView({ q, onAnswer, onComplete }: ViewProps<Rima>) {
     setResult(correct ? 'right' : 'wrong')
     onAnswer('rima', saysRhymes ? 'sim' : 'nao', correct)
     playSound(correct ? 'right' : 'wrong')
-    const explanation = q.rhymes ? `${a} e ${b} rimam!` : `${a} e ${b} não rimam.`
-    speak(correct ? explanation : `Ops! ${explanation}`, () => onComplete())
+    speak(rimaExplanation(q.a, q.b, q.rhymes, correct), () => onComplete())
   }
 
   return (
@@ -249,7 +250,7 @@ export function RimaView({ q, onAnswer, onComplete }: ViewProps<Rima>) {
         </span>
         <Figure word={q.b} size="lg" />
       </div>
-      <SpeakButton text={instruction} label="Ouvir de novo" />
+      <SpeakButton line={instruction} label="Ouvir de novo" />
       <div className="rima-buttons">
         <button
           type="button"

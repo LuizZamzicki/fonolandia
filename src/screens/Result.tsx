@@ -2,6 +2,7 @@ import { ArrowRight, Map as MapIcon, RotateCcw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { celebrate } from '../lib/celebrate'
 import { playSound } from '../lib/sounds'
+import { PHRASES } from '../data/phrases'
 import { speak } from '../lib/speech'
 import { stickerForRound } from '../game/rewards'
 import type { Round } from '../store/types'
@@ -18,9 +19,9 @@ interface Props {
 }
 
 const MESSAGES: Record<number, string> = {
-  1: 'Você conseguiu! Jogue de novo para ganhar mais estrelas.',
-  2: 'Muito bem! Falta pouco para três estrelas!',
-  3: 'Incrível! Três estrelas!',
+  1: PHRASES.stars1,
+  2: PHRASES.stars2,
+  3: PHRASES.stars3,
 }
 
 export function Result({ round, firstClear, hasNext, onAgain, onNext, onMap }: Props) {
@@ -30,7 +31,7 @@ export function Result({ round, firstClear, hasNext, onAgain, onNext, onMap }: P
 
   useEffect(() => {
     if (round.stars >= 2) celebrate(round.stars === 3 ? 'big' : 'small')
-    speak(message + (sticker ? ' Toque no baú!' : ''))
+    speak(sticker ? [message, PHRASES.tapChest] : message)
   }, [round, message, sticker])
 
   function openChest() {
@@ -38,7 +39,7 @@ export function Result({ round, firstClear, hasNext, onAgain, onNext, onMap }: P
     setChest('open')
     playSound('chest')
     celebrate('small')
-    speak(`Você ganhou a figurinha ${sticker.name}!`)
+    speak([PHRASES.youGotSticker, `${sticker.name}!`])
   }
 
   return (

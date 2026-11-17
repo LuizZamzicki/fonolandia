@@ -2,13 +2,13 @@
 
 import { ArrowLeft, Star, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { speak, speakWord } from '../lib/speech'
+import { lineText, speak, speakWord, type Line } from '../lib/speech'
 import type { Word } from '../data/words'
 
 export type Mood = 'idle' | 'happy' | 'oops' | 'party'
 
 /** Tuca, o papagaio que explica cada jogo. Tocar nele repete a fala. */
-export function Mascot({ text, mood = 'idle', say }: { text?: ReactNode; mood?: Mood; say?: string }) {
+export function Mascot({ text, mood = 'idle', say }: { text?: ReactNode; mood?: Mood; say?: Line }) {
   return (
     <div className={`mascot mascot-${mood}`}>
       <button
@@ -24,9 +24,9 @@ export function Mascot({ text, mood = 'idle', say }: { text?: ReactNode; mood?: 
   )
 }
 
-export function SpeakButton({ text, label = 'Ouvir', size = 26 }: { text: string; label?: string; size?: number }) {
+export function SpeakButton({ line, label = 'Ouvir', size = 26 }: { line: Line; label?: string; size?: number }) {
   return (
-    <button type="button" className="speak-btn" onClick={() => speak(text)} aria-label={label}>
+    <button type="button" className="speak-btn" onClick={() => speak(line)} aria-label={label} title={lineText(line)}>
       <Volume2 size={size} />
     </button>
   )

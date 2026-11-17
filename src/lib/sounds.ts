@@ -9,7 +9,8 @@ export type Sound = 'right' | 'wrong' | 'complete' | 'levelup' | 'pop' | 'chest'
 
 let context: AudioContext | null = null
 
-function audio(): AudioContext | null {
+/** O mesmo AudioContext para efeitos e gravações (no iPhone, ele é liberado no primeiro toque). */
+export function audio(): AudioContext | null {
   if (typeof AudioContext === 'undefined') return null
   context ??= new AudioContext()
   if (context.state === 'suspended') void context.resume()

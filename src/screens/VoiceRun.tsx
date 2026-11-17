@@ -14,10 +14,11 @@ import { ISLANDS, pairOf, soundInfo } from '../data/sounds'
 import { wordById, wordsStartingWith, type Word } from '../data/words'
 import { bestStars, islandUnlocked } from '../game/progress'
 import { pick, shuffle } from '../game/questions'
-import { chooseSound, plainLetters, runWords, soundPrompt } from '../game/voiceLetters'
+import { chooseSound, plainLetters, runWords, soundPrompt, soundPromptParts } from '../game/voiceLetters'
 import { celebrate } from '../lib/celebrate'
 import { playSound, type Sound } from '../lib/sounds'
-import { speak, stopSpeaking } from '../lib/speech'
+import { PHRASES } from '../data/phrases'
+import { speak, stopSpeaking, type Line } from '../lib/speech'
 import { getDb } from '../store/db'
 import type { Student } from '../store/types'
 import { loadVoices, taughtSounds, templatesFor, useVoices } from '../store/voices'
@@ -159,7 +160,7 @@ export function VoiceRun({ student, onExit }: { student: Student; onExit: () => 
   }
 
   /** Fala sem o microfone escutar a si mesmo. */
-  function say(text: string, onEnd?: () => void) {
+  function say(text: Line, onEnd?: () => void) {
     deafUntil.current = Number.POSITIVE_INFINITY
     speak(text, () => {
       deafUntil.current = performance.now() + 600
@@ -206,8 +207,8 @@ export function VoiceRun({ student, onExit }: { student: Student; onExit: () => 
     placeRound(first, run.current.x)
     say(
       canListen
-        ? 'Eu vou correr! Para passar pela parede, faça o som da letra que está nela.'
-        : 'Eu vou correr! Para passar pela parede, toque na letra que está nela.',
+        ? PHRASES.runVoice
+        : PHRASES.runTap,
     )
     if (!canListen) return
     // O microfone abre já no toque (o navegador só pede permissão depois de um toque)
@@ -247,7 +248,7 @@ export function VoiceRun({ student, onExit }: { student: Student; onExit: () => 
     setCount((c) => c + 1)
     celebrate('small')
     sfx('complete')
-    say(finished.word ? `Você formou ${finished.word.word.toLowerCase()}!` : 'Muito bem! Que sons bonitos!')
+    say(finished.word ? [PHRASES.youFormed, `${finished.word.word.toLowerCase()}!`] : PHRASES.niceSounds)
     window.setTimeout(() => {
       setDone(null)
       const next = newRound(finished.word?.id)
@@ -296,9 +297,8 @@ export function VoiceRun({ student, onExit }: { student: Student; onExit: () => 
               r.bumps++
               sfx('wrong')
               if (r.bumps === 2 || r.bumps % 4 === 0) {
-                const text = soundPrompt(b.letter)
-                setHint(text)
-                say(text)
+                setHint(soundPrompt(b.letter))
+                say(soundPromptParts(b.letter))
               }
             }
           }

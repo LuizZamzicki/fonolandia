@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { GAME_INFO, ISLANDS } from '../data/sounds'
 import { bestStars, isUnlocked, islandDone, islandUnlocked, nextLevel, streakDays, totalStars } from '../game/progress'
 import { avatarEmoji } from '../game/rewards'
+import { PHRASES } from '../data/phrases'
 import { speak } from '../lib/speech'
 import { useDb } from '../store/db'
 import type { Student } from '../store/types'
@@ -124,7 +125,7 @@ export function MapScreen({ student, onPlay, onAlbum, onAvatar, onVoice, onExit 
                         style={{ '--game': info.gradient } as React.CSSProperties}
                         onClick={() => {
                           if (unlocked) onPlay(level.id)
-                          else speak('Essa fase ainda está trancada. Termine a anterior!')
+                          else speak(PHRASES.locked)
                         }}
                         aria-label={`${info.name}${unlocked ? '' : ' (trancada)'}, ${levelStars} estrelas`}
                       >

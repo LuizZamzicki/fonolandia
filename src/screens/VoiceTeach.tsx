@@ -6,11 +6,12 @@ import { useEffect, useRef, useState } from 'react'
 import { features } from '../audio/features'
 import { openMic, type Mic as MicHandle } from '../audio/mic'
 import { soundInfo } from '../data/sounds'
-import { soundPrompt } from '../game/voiceLetters'
+import { soundPrompt, soundPromptParts } from '../game/voiceLetters'
 import { wordById } from '../data/words'
 import { celebrate } from '../lib/celebrate'
 import { playSound } from '../lib/sounds'
-import { speak, stopSpeaking } from '../lib/speech'
+import { PHRASES } from '../data/phrases'
+import { speak, stopSpeaking, type Line } from '../lib/speech'
 import type { Student } from '../store/types'
 import { addVoice } from '../store/voices'
 import { Figure, Mascot } from '../ui/kit'
@@ -41,7 +42,7 @@ export function VoiceTeach({ student, sounds, onDone }: Props) {
     [],
   )
 
-  function say(text: string) {
+  function say(text: Line) {
     deafUntil.current = Number.POSITIVE_INFINITY
     speak(text, () => {
       deafUntil.current = performance.now() + 500
@@ -57,10 +58,10 @@ export function VoiceTeach({ student, sounds, onDone }: Props) {
       mic.current = null
       celebrate('small')
       playSound('complete')
-      speak('Pronto! Agora eu conheço a sua voz!', onDone)
+      speak(PHRASES.teachDone, onDone)
       return
     }
-    say(soundPrompt(sounds[i]))
+    say(soundPromptParts(sounds[i]))
   }
 
   async function begin() {
@@ -94,7 +95,7 @@ export function VoiceTeach({ student, sounds, onDone }: Props) {
               Antes de correr, me ensina a <strong>sua voz</strong>? Eu mostro uma letra e você faz o <strong>som</strong> dela.
             </>
           }
-          say="Antes de correr, me ensina a sua voz? Eu mostro uma letra e você faz o som dela."
+          say={PHRASES.teachAsk}
         />
         <button type="button" className="btn btn-primary btn-xl" onClick={() => void begin()}>
           <Mic size={30} /> Vamos!
@@ -126,7 +127,7 @@ export function VoiceTeach({ student, sounds, onDone }: Props) {
         <span>{got ? 'Aprendi! ✓' : soundPrompt(current)}</span>
       </div>
       <div className="btn-row teach-actions">
-        <button type="button" className="btn btn-soft" onClick={() => say(soundPrompt(current))}>
+        <button type="button" className="btn btn-soft" onClick={() => say(soundPromptParts(current))}>
           <Volume2 size={20} /> Ouvir de novo
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => goTo(index + 1)}>

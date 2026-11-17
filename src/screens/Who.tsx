@@ -1,6 +1,7 @@
 import { GraduationCap } from 'lucide-react'
 import { useEffect } from 'react'
 import { avatarEmoji } from '../game/rewards'
+import { PHRASES } from '../data/phrases'
 import { speak } from '../lib/speech'
 import { useDb } from '../store/db'
 import { Mascot } from '../ui/kit'
@@ -16,7 +17,7 @@ export function Who({ onPick, onTeacher }: Props) {
   const students = db.students.filter((s) => !s.archived).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 
   useEffect(() => {
-    const timer = window.setTimeout(() => speak(students.length > 0 ? 'Olá! Quem vai jogar?' : 'Olá! Eu sou o Tuca.'), 400)
+    const timer = window.setTimeout(() => speak(students.length > 0 ? PHRASES.helloWho : PHRASES.helloTuca), 400)
     return () => window.clearTimeout(timer)
   }, [students.length])
 
@@ -36,7 +37,7 @@ export function Who({ onPick, onTeacher }: Props) {
 
       {students.length > 0 ? (
         <>
-          <Mascot text="Quem vai jogar?" say="Quem vai jogar?" />
+          <Mascot text="Quem vai jogar?" say={PHRASES.who} />
           <div className="who-grid">
             {students.map((s, i) => (
               <button
@@ -45,7 +46,7 @@ export function Who({ onPick, onTeacher }: Props) {
                 className="who-card rise"
                 style={{ animationDelay: `${Math.min(i, 20) * 30}ms` }}
                 onClick={() => {
-                  speak(`Oi, ${s.name}!`)
+                  speak([`${PHRASES.hi},`, `${s.name}!`])
                   onPick(s.id)
                 }}
               >
@@ -65,7 +66,7 @@ export function Who({ onPick, onTeacher }: Props) {
                 Olá! Eu sou o <strong>Tuca</strong>. Para começar, a professora cadastra a turma.
               </>
             }
-            say="Olá! Eu sou o Tuca. Para começar, a professora cadastra a turma."
+            say={PHRASES.firstTime}
           />
           <button type="button" className="btn btn-primary btn-lg" onClick={onTeacher}>
             <GraduationCap size={22} /> Cadastrar a turma

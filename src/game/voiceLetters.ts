@@ -1,8 +1,9 @@
 // Corrida da Voz: quais palavras servem e como decidir qual som a criança fez.
 
 import type { Ranked } from '../audio/features'
-import { soundInfo } from '../data/sounds'
-import { wordById, WORDS, type Word } from '../data/words'
+import { soundPromptLine } from '../data/phrases'
+import { WORDS, type Word } from '../data/words'
+import { lineText, type Part } from '../lib/speech'
 
 /** Sem acento, maiúsculas, só letras (PÃO → PAO). */
 export function plainLetters(word: string): string {
@@ -70,9 +71,10 @@ export function chooseSound(ranked: Ranked[], wanted: string | null): string | n
 
 /** O pedido falado: o som, nunca o nome da letra ("Faça o som do começo de sapo!"). */
 export function soundPrompt(letter: string): string {
-  const info = soundInfo(letter)
-  const example = info ? wordById(info.example)?.word.toLowerCase() : undefined
-  if (!info || !example) return 'Faça o som desta letra!'
-  if (VOWEL.test(letter)) return `Faça ${info.spoken}, como no começo de ${example}!`
-  return `Faça o som do começo de ${example}!`
+  return lineText(soundPromptParts(letter))
+}
+
+/** O mesmo pedido em partes, para tocar a voz gravada da professora. */
+export function soundPromptParts(letter: string): Part[] {
+  return soundPromptLine(letter, VOWEL.test(letter))
 }
